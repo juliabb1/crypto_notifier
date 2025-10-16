@@ -63,10 +63,10 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no [ADRESS] "
             docker pull ghcr.io/${{ github.repository }}:latest &&
-            docker stop test-ci-cd || true &&
-            docker rm test-ci-cd || true &&
+            docker stop {{ github.repository }} || true &&
+            docker rm {{ github.repository }} || true &&
             docker run -d \
-                --name test-ci-cd \
+                --name {{ github.repository }} \
                 -p 8080:5000 \
                 --restart unless-stopped \
                 --network shared_net \
