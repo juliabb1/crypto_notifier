@@ -20,7 +20,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Literal Block scalar allows to write multi-line shell commands
           pip install -r requirements.txt
 
       - name: Run tests
@@ -30,6 +29,8 @@ jobs:
     name: 🐳 Build Docker Image
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      image-name: ${{ steps.set_image_name.outputs.IMAGE_NAME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,13 +40,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - run: |
+      - name: Build and push Docker image
+        id: set_image_name
+        run: |
+          IMAGE_NAME="ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
           docker buildx create --use
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            -t ghcr.io/${{ github.repository }}:latest \
+            -t $IMAGE_NAME \
             --push \
             .
+
+  deploy:
+    name: 🚀 Deploy to Raspberry Pi
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -53,14 +65,18 @@ jobs:
 
       - name: Deploy via Docker Compose
         run: |
-          IMAGE_NAME="ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          IMAGE_NAME="${{ needs.build.outputs.image-name }}"
+          TARGET_DIR="/home/cryptonotifier/deploy"
+
+          # Ensure target folder exists on Raspberry Pi
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_TARGET }} "mkdir -p $TARGET_DIR"
 
           # Copy docker-compose.yml to Raspberry Pi
-          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SSH_TARGET }}:/home/cryptonotifier/deploy/docker-compose.yml
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SSH_TARGET }}:$TARGET_DIR/docker-compose.yml
 
           # Deploy via SSH, passing IMAGE_NAME explicitly
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_TARGET }} bash -c "'
-            cd /home/cryptonotifier/deploy
+            cd $TARGET_DIR
             export IMAGE_NAME=$IMAGE_NAME
             echo \"Pulling latest image: \$IMAGE_NAME\"
             docker-compose pull
