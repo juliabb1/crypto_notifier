@@ -63,6 +63,19 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: 🔍 Test SSH connectivity
+        run: |
+          echo "Testing SSH connection..."
+          ssh -v -p 2222 -o StrictHostKeyChecking=no ${{ secrets.SSH_TARGET }} "echo Connected successfully"
+
+      - name: 📦 Test SCP
+        run: |
+          echo "Testing SCP file transfer..."
+          scp -v -P 2222 -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SSH_TARGET }}:/tmp/docker-compose.yml
+
+      - name: 🧠 Stop before real deploy
+        run: echo "SSH connection succeeded — ready to enable deployment"
+
       - name: Deploy via Docker Compose
         run: |
           IMAGE_NAME="${{ needs.build.outputs.image-name }}"
