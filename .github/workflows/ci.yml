@@ -20,7 +20,6 @@ jobs:
       - name: Test IPv6 connectivity
         run: |
           curl -m 9 --ipv6 --verbose https://google.com
-
       - name: Deploy Docker container via SSH over IPv6
         uses: appleboy/ssh-action@master
         with:
@@ -33,20 +32,16 @@ jobs:
           script: |
             IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
             CONTAINER_NAME="crypto_notifier"
-
             echo "Pulling latest image: $IMAGE_NAME"
             docker pull $IMAGE_NAME
-
             echo "Stopping existing container (if any)..."
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
-
             echo "Starting new container..."
             docker run -d --name $CONTAINER_NAME \
               --restart unless-stopped \
               -p 8080:8080 \
               $IMAGE_NAME
-
             echo "Deployment complete!"
 
 # name: Test CI/CD
