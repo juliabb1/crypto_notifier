@@ -68,31 +68,24 @@ jobs:
           echo "Testing SSH connection..."
           ssh -v -p 2222 -o StrictHostKeyChecking=no ${{ secrets.SSH_TARGET }} "echo Connected successfully"
 
-      - name: 📦 Test SCP
-        run: |
-          echo "Testing SCP file transfer..."
-          scp -v -P 2222 -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SSH_TARGET }}:/tmp/docker-compose.yml
-
-      - name: 🧠 Stop before real deploy
-        run: echo "SSH connection succeeded — ready to enable deployment"
-
-      - name: Deploy via Docker Compose
+      - name: 🐳 Deploy Docker container
         run: |
           IMAGE_NAME="${{ needs.build.outputs.image-name }}"
-          TARGET_DIR="/home/cryptonotifier/deploy"
+          CONTAINER_NAME="crypto_notifier"
 
-          # Ensure target folder exists on Raspberry Pi
-          ssh -p 2222 -o StrictHostKeyChecking=no ${{ secrets.SSH_TARGET }} "mkdir -p $TARGET_DIR"
-
-          # Copy docker-compose.yml to Raspberry Pi
-          scp -P 2222 -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.SSH_TARGET }}:$TARGET_DIR/docker-compose.yml
-
-          # Deploy via SSH, passing IMAGE_NAME explicitly
           ssh -p 2222 -o StrictHostKeyChecking=no ${{ secrets.SSH_TARGET }} bash -c "
-            cd $TARGET_DIR
-            export IMAGE_NAME=$IMAGE_NAME
-            echo \"Pulling latest image: \$IMAGE_NAME\"
-            docker compose pull
-            echo \"Starting container...\"
-            docker compose up -d
+            echo 'Pulling latest image: $IMAGE_NAME'
+            docker pull $IMAGE_NAME
+
+            echo 'Stopping existing container (if any)...'
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+
+            echo 'Starting new container...'
+            docker run -d --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              -p 8080:8080 \  # map ports as needed
+              $IMAGE_NAME
+
+            echo 'Deployment complete!'
           "
