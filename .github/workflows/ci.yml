@@ -31,7 +31,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }} # e.g., 2222
           command_timeout: 30s
           script: |
-            IMAGE_NAME="ghcr.io/${{ github.repository }}:${{ github.sha }}"
+            IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
             CONTAINER_NAME="crypto_notifier"
 
             echo "Pulling latest image: $IMAGE_NAME"
@@ -94,7 +94,7 @@ jobs:
 #       - name: Build and push Docker image
 #         id: set_image_name
 #         run: |
-#           IMAGE_NAME="ghcr.io/${{ github.repository }}:${{ github.sha }}"
+#           IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
 #           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
 #           docker buildx create --use
 #           docker buildx build \
