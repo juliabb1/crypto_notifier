@@ -1,0 +1,142 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------
+  # 1️⃣ Run UNIT TESTS
+  # ---------------------------------------------------
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/unit -v
+
+  # ---------------------------------------------------
+  # 2️⃣ Run INTEGRATION TESTS (in Docker Compose)
+  # ---------------------------------------------------
+  integration-tests:
+    name: 🔗 Integration Tests (Docker Compose)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          docker compose version
+
+      - name: Build and start services
+        run: |
+          docker compose -f docker-compose.prod.yml --env-file .env.test up -d --build
+
+      - name: Wait for DB to be ready
+        run: |
+          echo "⏳ Waiting for DB to become healthy..."
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' crypto_notifier_db_prod || echo "null")
+            if [ "$STATUS" = "\"healthy\"" ]; then
+              echo "✅ Database is healthy"
+              break
+            fi
+            echo "Still waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run integration tests inside app container
+        run: |
+          docker exec crypto_notifier_app_prod python -m pytest tests/integration -v
+
+      - name: Tear down environment
+        if: always()
+        run: |
+          docker compose -f docker-compose.prod.yml --env-file .env.test down -v
+
+  # ---------------------------------------------------
+  # 3️⃣ Build & Push Docker Image
+  # ---------------------------------------------------
+  build:
+    name: 🐳 Build Docker Image
+    needs: [unit-tests, integration-tests]
+    runs-on: ubuntu-latest
+    outputs:
+      image-name: ${{ steps.meta.outputs.image-name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Set image name
+        id: meta
+        run: |
+          IMAGE_NAME="ghcr.io/${{ github.repository }}:latest"
+          echo "image-name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        run: |
+          docker buildx create --use
+          docker buildx build \
+            -t ${{ steps.meta.outputs.image-name }} \
+            --push .
+
+  # ---------------------------------------------------
+  # 4️⃣ Deploy to Raspberry Pi via Docker Compose
+  # ---------------------------------------------------
+  deploy:
+    name: 🚀 Deploy to Raspberry Pi
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up WARP (dual-stack)
+        uses: fscarmen/warp-on-actions@v1.1
+        with:
+          stack: dual
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_TARGET }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          protocol: tcp6
+          port: ${{ secrets.SSH_PORT }}
+          command_timeout: 600s
+          script: |
+            echo "🚀 Deploying latest version..."
+            cd ~/crypto_notifier || exit 1
+            git pull origin main
+
+            echo "🛠️ Updating containers..."
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            echo "✅ Deployment complete!"
