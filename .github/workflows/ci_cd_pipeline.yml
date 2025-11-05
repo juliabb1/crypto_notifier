@@ -118,7 +118,18 @@ jobs:
         with:
           stack: dual
 
-      - name: Deploy via SSH
+      - name: Deploy via SSH (copy only Compose file)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_TARGET }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          protocol: tcp6
+          port: ${{ secrets.SSH_PORT }}
+          source: "docker-compose.prod.yml"
+          target: "~/crypto_notifier/"
+
+      - name: Run deploy commands via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_TARGET }}
@@ -128,11 +139,9 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           command_timeout: 600s
           script: |
-            echo "🚀 Deploying latest version..."
-
+            echo "🚀 Deploying latest Compose config..."
             mkdir -p ~/crypto_notifier
             cd ~/crypto_notifier || exit 1
-            git pull origin main
 
             echo "🧩 Writing .env.prod from secrets..."
             cat <<EOF > .env.prod
