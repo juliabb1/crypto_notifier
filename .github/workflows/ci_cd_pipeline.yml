@@ -60,19 +60,6 @@ jobs:
       - name: Build and start containers
         run: docker compose -f docker-compose.test.yml --env-file .env.test up -d --build
 
-      - name: Wait for MySQL to be healthy
-        run: |
-          echo "⏳ Waiting for database to become healthy..."
-          for i in {1..30}; do
-            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' ${{ secrets.DB_HOST }} || echo "null")
-            if [ "$STATUS" = "\"healthy\"" ]; then
-              echo "✅ Database is healthy"
-              break
-            fi
-            echo "Still waiting... ($i/30)"
-            sleep 2
-          done
-
       - name: Run integration tests
         run: docker exec crypto_notifier_app_test python -m pytest tests/integration -v
 
@@ -143,6 +130,7 @@ jobs:
           script: |
             echo "🚀 Deploying latest version..."
 
+            mkdir -p ~/crypto_notifier
             cd ~/crypto_notifier || exit 1
             git pull origin main
 
