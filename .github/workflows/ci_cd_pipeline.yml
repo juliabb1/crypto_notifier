@@ -58,7 +58,7 @@ jobs:
           cat .env.test
 
       - name: Build and start containers
-        run: docker compose -f docker-compose.prod.yml --env-file .env.test up -d --build
+        run: docker compose -f docker-compose.test.yml --env-file .env.test up -d --build
 
       - name: Wait for MySQL to be healthy
         run: |

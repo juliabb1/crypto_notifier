@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: crypto_notifier_db_test
+    volumes:
+      - .:/app
+    env_file:
+      - .env.test
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python -m app.main
+
+  db:
+    image: mysql:8.1
+    container_name: crypto_notifier_db_test
+    env_file:
+      - .env.test
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u${MYSQL_USER}",
+          "-p${MYSQL_PASSWORD}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mysql_data_prod:
