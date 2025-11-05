@@ -1,23 +1,23 @@
+version: "3.9"
+
 services:
   app:
-    build: .
-    container_name: crypto_notifier_app_test
-    volumes:
-      - .:/app
+    image: ghcr.io/juliabb1/crypto_notifier:latest
+    container_name: crypto_notifier_app_prod
     env_file:
-      - .env.test
+      - .env.prod
     depends_on:
       db:
         condition: service_healthy
-    command: python -m app.main
+    restart: always
 
   db:
     image: mysql:8.1
-    container_name: crypto_notifier_db_test
+    container_name: crypto_notifier_db_prod
     env_file:
-      - .env.test
+      - .env.prod
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data_prod:/var/lib/mysql
     healthcheck:
@@ -27,7 +27,7 @@ services:
           "mysqladmin",
           "ping",
           "-h",
-          "localhost",
+          "127.0.0.1",
           "-u${MYSQL_USER}",
           "-p${MYSQL_PASSWORD}",
         ]
@@ -35,6 +35,7 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
+    restart: always
 
 volumes:
   mysql_data_prod:

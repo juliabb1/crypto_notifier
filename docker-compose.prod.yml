@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   app:
     image: ghcr.io/juliabb1/crypto_notifier:latest
@@ -10,7 +8,6 @@ services:
       db:
         condition: service_healthy
     # Only include this if the image has no CMD
-    command: python -m app.main
     restart: always
 
   db:
