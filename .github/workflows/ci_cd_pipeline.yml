@@ -118,6 +118,7 @@ jobs:
         with:
           stack: dual
 
+      # Copy docker-compose file to Pi
       - name: Deploy via SSH (copy only Compose file)
         uses: appleboy/scp-action@master
         with:
@@ -129,7 +130,8 @@ jobs:
           source: "docker-compose.prod.yml"
           target: "~/crypto_notifier/"
 
-      - name: Run deploy commands via SSH
+      # Run deploy commands via SSH
+      - name: Run deployment commands via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_TARGET }}
@@ -139,10 +141,13 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           command_timeout: 600s
           script: |
-            echo "🚀 Deploying latest Compose config..."
+            echo "🚀 Deploying latest GHCR image..."
+
+            # Ensure target folder exists
             mkdir -p ~/crypto_notifier
             cd ~/crypto_notifier || exit 1
 
+            # Generate .env.prod from GitHub secrets
             echo "🧩 Writing .env.prod from secrets..."
             cat <<EOF > .env.prod
             ENV=PROD
@@ -155,9 +160,13 @@ jobs:
             DATABASE_URL=mysql+mysqlconnector://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.MYSQL_DATABASE }}
             EOF
 
-            echo "🐋 Restarting containers..."
+            # Pull latest image from GHCR
+            echo "🐋 Pulling latest image from GHCR..."
             docker compose -f docker-compose.prod.yml --env-file .env.prod pull
-            docker compose -f docker-compose.prod.yml --env-file .env.prod down
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+            # Restart containers with new image
+            echo "🐋 Restarting containers..."
+            docker compose -f docker-compose.prod.yml --env-file .env.prod down || true
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
             echo "✅ Deployment complete!"

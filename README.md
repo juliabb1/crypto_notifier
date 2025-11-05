@@ -2,17 +2,38 @@
 
 A Crypto Tracking Tool.
 
-# Develop and run on your Local Machine
+# Development Setup
 
-1. Start MySQL container only: `docker-compose -f docker-compose.dev.yml up -d`
-2. Install requirements locally: `pip install -r requirements.txt`
-3. Initialize and seed DB:
+## Develop and run on your Local Machine
+
+### Prerequisites
+
+- Python 3.12
+- Docker Engine
+- [recommended] Anaconda for virtual environment management
+- [recommended] DBeaver for database management
+
+### Setup Steps
+
+### initial setup
+
+1. Clone the repo: `git clone <repo_url>`
+2. Navigate into project directory: `cd CryptoNotifier`
+3. [recommended] Create and activate virtual environment
+4. Update `.env.dev` with your configuration (DB credentials, API keys, etc.)
+
+### Daily Development
+
+1. Pull latest changes: `git pull origin <your_branch>`
+2. Start MySQL container only: `docker-compose -f docker-compose.dev.yml up -d`
+3. Install requirements locally: `pip install -r requirements.txt`
+4. Initialize and seed DB:
    - `python scripts/init_db.py`
    - `python scripts/seed.py` -> adds sample data
-4. Run your app: `python -m app.main` -> start software
-5. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
+5. Run your app: `python -m app.main` -> start software
+6. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
 
-# Branching and deployment
+# Branching and deployment Strategy
 
 - `feature/` for new features
 - `release/` for release candidates
