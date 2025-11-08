@@ -21,15 +21,19 @@ A Crypto Tracking Tool.
 2. Navigate into project directory: `cd CryptoNotifier`
 3. [recommended] Create and activate virtual environment
 4. Update `.env.dev` with your configuration (DB credentials, API keys, etc.)
+- Schema for Mysql Database URL:
+`DATABASE_URL=mysql+mysqldb://<user>:<password>@<host>[:<port>]/<dbname>`
+- Note: Use `127.0.0.1` instead of `localhost` in the `DATABASE_URL`
 
 ### Daily Development
 
 1. Pull latest changes: `git pull origin <your_branch>`
-2. Start MySQL container only: `docker-compose -f docker-compose.dev.yml up -d`
+2. Start MySQL container only: `docker-compose -f docker-compose.dev.yml up -d` \
+or with new docker compose command: `docker compose -f docker-compose.dev.yml up -d`
 3. Install requirements locally: `pip install -r requirements.txt`
 4. Initialize and seed DB:
    - `python scripts/init_db.py`
-   - `python scripts/seed.py` -> adds sample data
+   - `python scripts/seed_data.py` -> adds sample data
 5. Run your app: `python -m app.main` -> start software
 6. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
 
