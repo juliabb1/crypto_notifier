@@ -1,35 +1,68 @@
-from typing import Union
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-from app.models import Cryptocurrency
-from app.db import SessionLocal
-from scripts.init_db import init_db
+import os
+import threading
+import logging
+from dotenv import load_dotenv
+from app.services.DataService import DataService
+from app.telegram_bot import TelegramBot
+from app.discord_bot import DiscordBot
 
-def list_cryptocurrencies():
-    db = SessionLocal()
-    crypto_currencies = db.query(Cryptocurrency).all()
-    for c in crypto_currencies:
-       print(f"{c.fullName}: ({c.symbol})")
-    db.close()
-    return crypto_currencies
+load_dotenv(dotenv_path='.env.dev')
+DISCORD_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+DISCORD_GUILD_ID = os.environ.get('DISCORD_GUILD_ID')
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Connecting to DB...")
-    init_db()
-    print("=== Crypto Prices ===")
-    cryptos = list_cryptocurrencies()
-    print(f"Loaded {len(cryptos)} cryptos from DB.")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
-    yield
+def main():
+    """The main entry point of your multi-bot application."""
+    logging.info("--- Starting Multi-Bot Application ---")
 
-    # Clean up the ML models and release the resources
-    print("Closing DB connection...")
-app = FastAPI(lifespan=lifespan)
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+    # Both bots will use same instance to fetch data
+    shared_data_service = DataService()
+    logging.info("Shared DataService instantiated.")
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+    # --- Discord Bot Setup ---
+    if DISCORD_TOKEN and DISCORD_GUILD_ID:
+        discord_bot_instance = DiscordBot(
+            token=DISCORD_TOKEN,
+            guild_id=DISCORD_GUILD_ID,
+            data_service=shared_data_service
+        )
+        # Start Discord Bot in a separate, daemonized thread
+        discord_thread = threading.Thread(
+            target=discord_bot_instance.run,
+            name="DiscordBotThread",
+            daemon=True
+        )
+        discord_thread.start()
+        logging.info("Discord Bot started in a background thread.")
+    else:
+        logging.warning("Discord Bot skipped: Token or Guild ID is missing.")
+
+    # --- Telegram Bot Setup ---
+    if TELEGRAM_TOKEN:
+        telegram_bot_instance = TelegramBot(
+            token=TELEGRAM_TOKEN,
+            data_service=shared_data_service
+        )
+        # Start Telegram Bot in a separate, daemonized thread
+        telegram_thread = threading.Thread(
+            target=telegram_bot_instance.run,
+            name="TelegramBotThread",
+            daemon=True
+        )
+        telegram_thread.start()
+        logging.info("Telegram Bot started in a background thread.")
+    else:
+        logging.warning("Telegram Bot skipped: Token is missing.")
+
+    try:
+        logging.info("Main application (mathdo) is running. Press Ctrl+C to exit.")
+        while True:
+            # Keep main thread alive so the daemon threads (bots) can run
+            threading.Event().wait(3)
+    except KeyboardInterrupt:
+        logging.info("Main application interrupted. Shutting down all services.")
+
+if __name__ == '__main__':
+    main()
