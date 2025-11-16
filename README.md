@@ -31,11 +31,12 @@ A Crypto Tracking Tool.
 2. Start MySQL container only: `docker-compose -f docker-compose.dev.yml up -d` \
 or with new docker compose command: `docker compose -f docker-compose.dev.yml up -d`
 3. Install requirements locally: `pip install -r requirements.txt`
-4. Initialize and seed DB:
+4. Set Python path to project root: `export PYTHONPATH=$PYTHONPATH:$(pwd)` (so imports work correctly)
+5. Initialize and seed DB:
    - `python scripts/init_db.py` / `python -m scripts.init_db`
    - `python scripts/seed_data.py` / `python -m scripts.seed_data` -> adds sample data
-5. Run your app: `python -m app.main` -> start software
-6. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
+6. Run your app: `python -m app.main` -> start software
+7. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
 
 # Branching and deployment Strategy
 
