@@ -21,7 +21,6 @@ class TelegramBot:
         self.data_service = data_service
         self.application = ApplicationBuilder().token(self.token).build()
         self._add_handlers()
-        logging.info("TelegramBot initialized with handlers.")
 
     async def _general_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Echoes any non-command text message."""
@@ -65,9 +64,9 @@ class TelegramBot:
 
     def run(self):
         """Starts the bot using long polling."""
-        logging.info("Starting Telegram Bot (Polling)...")
-        self.application.run_polling(stop_signals=[])
-
+        logging.info("Starting Telegram Bot.")
+        # self.application.run_polling(stop_signals=[])
+        self.application.run_webhook()
 
 # run the bot directly from this file (for testing)
 if __name__ == '__main__':

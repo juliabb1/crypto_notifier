@@ -13,14 +13,10 @@ class DiscordBot:
         self.guild_id = guild_id
         self.data_service = data_service
         self.MY_GUILD = discord.Object(id=self.guild_id)
-
-        # Intents setup
         self.intents = discord.Intents.default()
         self.intents.message_content = True
-
-        # Bot setup
         self.bot = commands.Bot(command_prefix='/', intents=self.intents)
-        self._add_events_and_commands()
+        # self._add_events_and_commands()
 
     def _add_events_and_commands(self):
         """Registers all events and commands."""

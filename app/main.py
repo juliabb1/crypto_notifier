@@ -1,3 +1,4 @@
+import asyncio
 import os
 import threading
 import logging
@@ -64,5 +65,19 @@ def main():
     except KeyboardInterrupt:
         logging.info("Main application interrupted. Shutting down all services.")
 
+def main_synchronous():
+    shared_data_service = DataService()
+    discord_bot = DiscordBot(DISCORD_TOKEN, DISCORD_GUILD_ID, shared_data_service)
+    telegram_bot = TelegramBot(TELEGRAM_TOKEN, shared_data_service)
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(discord_bot.run())
+    threading.Thread(target=loop.run_forever).start()
+    # discordBot.run()
+    logging.info("!!!Discord Bot started.!!!")
+    telegram_bot.run()
+    logging.info("Telegram Bot started.")
+
 if __name__ == '__main__':
-    main()
+    # main()
+    main_synchronous()
