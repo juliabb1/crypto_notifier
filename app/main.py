@@ -14,7 +14,7 @@ DISCORD_GUILD_ID = int(os.environ.get('DISCORD_GUILD_ID'))
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
-async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def telegram_list_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
     await update.message.reply_text("List!")
 
@@ -35,34 +35,44 @@ class Tracker(commands.Cog):
             return
         await message.channel.send(f"I heard you say: {message.content}")
 
-async def run_discord():
-    intents = discord.Intents.default()
-    intents.message_content = True
-    bot = commands.Bot(command_prefix='/', intents=intents)
-    await bot.add_cog(Tracker(bot))
-    await bot.start(DISCORD_TOKEN)
-    try:
-        await asyncio.Future() # wait indefinitely until future is resolved/canceled (in pending state)
-    except asyncio.CancelledError: # when future is explicitly canceled, await raises this exception
-        pass # do nothing, continue program flow
-    await bot.close()
+telegram_bot = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+telegram_bot.add_handler(CommandHandler("list", telegram_list_command, block=False))
 
-async def run_telegram():
-    application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    application.add_handler(CommandHandler("list", list_command, block=False))
-    # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,echo, block=False))
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling(
+intents = discord.Intents.default()
+intents.message_content = True
+discord_bot = commands.Bot(command_prefix='/', intents=intents)
+
+async def run_telegram_bot():
+    await telegram_bot.initialize()
+    await telegram_bot.start()
+    await telegram_bot.updater.start_polling(
         poll_interval=0.0,
         timeout=60,
         allowed_updates=["message", "callback_query"],
         drop_pending_updates=True
     )
-    await run_discord()
-    await application.updater.stop()
-    await application.stop()
-    await application.shutdown()
+
+async def run_discord_bot():
+    await discord_bot.add_cog(Tracker(discord_bot))
+    await discord_bot.start(DISCORD_TOKEN)
+
+async def stop_telegram_bot():
+    await telegram_bot.updater.stop()
+    await telegram_bot.stop()
+    await telegram_bot.shutdown()
+
+async def stop_discord_bot():
+    await discord_bot.close()
+
+async def run_bots_asynchronously():
+    await run_telegram_bot()
+    await run_discord_bot()
+    try:
+        await asyncio.Future() # wait indefinitely until future is resolved/canceled (in pending state)
+    except asyncio.CancelledError: # when future is explicitly canceled, the previous "await" raises this exception
+        pass # continue program flow
+    await stop_telegram_bot()
+    await stop_discord_bot()
 
 if __name__ == '__main__':
-    asyncio.run(run_telegram())
+    asyncio.run(run_bots_asynchronously())
