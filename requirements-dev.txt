@@ -6,3 +6,7 @@ flake8
 
 # Pre-Commit Framework
 pre-commit
+
+# Type Checking
+mypy
+types-requests
