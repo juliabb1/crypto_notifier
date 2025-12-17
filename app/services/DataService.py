@@ -9,6 +9,7 @@ class DataService:
     def api_url1(self):
         return "https://api.coingecko.com/api/v3/coins/markets"
 
+    # async
     def list_top_10_crypto_currencies(self) -> list[Coin]:
         params = {
                 'vs_currency': 'usd',
@@ -16,6 +17,8 @@ class DataService:
                 'per_page': 10,
                 'page': 1
         }
+        # async with httpx.AsyncClient() as client:
+        #    r = await client.get(self.api_url1, params=params)
         r = httpx.get(self.api_url1, params=params)
         json_obj = json.loads(r.text)
         coins = [
