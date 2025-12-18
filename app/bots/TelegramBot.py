@@ -1,7 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, ApplicationBuilder
-from app.services.DataService import DataService
+from app.services.CryptoApiService import CryptoApiService
 from app.services.DatabaseService import AccountService, CryptocurrencyService, FavoriteService
 from app.models import PlatformType
 
@@ -38,14 +38,14 @@ class TelegramBot:
             await update.message.reply_text("Please provide a cryptocurrency name. Usage: /index bitcoin")
             return
         index = context.args[0]
-        result = await DataService.get_index(index=index)
+        result = await CryptoApiService.get_index(index=index)
         if result is None:
             await update.message.reply_text(f"Could not find price for {index}")
         else:
             await update.message.reply_text(f"{index.capitalize()}: {result:.2f} €")
 
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        result = await DataService.list_top_crypto_currencies(amount=10)
+        result = await CryptoApiService.list_top_crypto_currencies(amount=10)
         message = "Top 10 Cryptocurrencies by Market Cap:\n\n"
         for coin in result:
             message += f"{coin.market_cap_rank}. {coin.name} ({coin.symbol.upper()})\n"

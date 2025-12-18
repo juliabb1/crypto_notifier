@@ -8,15 +8,16 @@ from discord.ext import commands
 from discord import app_commands
 
 import app
-from app.services.DataService import DataService
+from app.services.CryptoApiService import CryptoApiService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 DISCORD_GUILD_ID = int(os.environ.get('DISCORD_GUILD_ID'))
 
 
-class Crypto_Notifier(commands.Cog):
-    def __init__(self, bot):
+class Crypto_Notifier_Cog(commands.Cog):
+    def __init__(self, bot, crypto_service: CryptoApiService):
         self.bot = bot
+        self.crypto_service = crypto_service
         self._last_member = None
 
     @commands.command(name='echo')
@@ -28,7 +29,7 @@ class Crypto_Notifier(commands.Cog):
         if not arg:
             await ctx.channel.send("Please provide a cryptocurrency name. Usage: /index btc")
             return
-        result = await DataService.get_index(arg)
+        result = await self.crypto_service.get_index(arg)
         if result is None:
             await ctx.channel.send(f"Could not find price for {arg}")
         else:
@@ -44,7 +45,7 @@ class Crypto_Notifier(commands.Cog):
     # TODO: Pass guild id dynamically
     @app_commands.guilds(discord.Object(id=DISCORD_GUILD_ID))
     async def _index2(self, interaction: discord.Interaction, currency: str):
-        result = await DataService.get_index(currency)
+        result = await self.crypto_service.get_index(currency)
         if result is None:
             await interaction.response.send_message(f"Could not find price for {currency}")
         else:
@@ -53,7 +54,7 @@ class Crypto_Notifier(commands.Cog):
 
     @commands.command(name='list')
     async def _list(self, ctx: commands.Context):
-        result = await DataService.list_top_crypto_currencies(amount=10)
+        result = await self.crypto_service.list_top_crypto_currencies(amount=10)
         message = "Top 10 Cryptocurrencies by Market Cap:\n\n"
         for coin in result:
             message += f"{coin.market_cap_rank}. {coin.name} ({coin.symbol.upper()})\n"
@@ -71,11 +72,20 @@ class Crypto_Notifier(commands.Cog):
 
 
 class DiscordBot:
-    def __init__(self, token: str, client_id: int, guild_id: int, channel_id: int):
+    def __init__(
+            self, 
+            token: str, 
+            client_id: int, 
+            guild_id: int, 
+            channel_id: int,
+            crypto_service: CryptoApiService):
+        
         self.token = token
         self.client_id = client_id
         self.guild_id = guild_id # guild = server
         self.channel_id = channel_id
+        self.crypto_api_service = crypto_service
+
         intents = discord.Intents.default()
         intents.message_content = True
         self.bot = commands.Bot(command_prefix='/', intents=intents)
@@ -101,12 +111,14 @@ class DiscordBot:
             else:
                 logging.error(f"Command error: {error}")
 
-    async def start(self):
-        """Start the Discord bot."""
-        await self.bot.add_cog(Crypto_Notifier(self.bot))
+    async def start(self):        
+        await self.bot.add_cog(Crypto_Notifier_Cog(self.bot, self.crypto_api_service))
         await self.bot.start(self.token)
         logging.info("DiscordBot has started!")
 
     async def stop(self):
         """Stop the Discord bot."""
         await self.bot.close()
+        if self.http_client:
+            await self.http_client.aclose()
+            logging.info("HTTP client closed")
