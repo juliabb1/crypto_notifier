@@ -15,9 +15,8 @@ DISCORD_GUILD_ID = int(os.environ.get('DISCORD_GUILD_ID'))
 
 
 class Crypto_Notifier(commands.Cog):
-    def __init__(self, bot, guild_id: int):
+    def __init__(self, bot):
         self.bot = bot
-        self.guild_id = guild_id
         self._last_member = None
 
     @commands.command(name='echo')
@@ -42,6 +41,8 @@ class Crypto_Notifier(commands.Cog):
         app_commands.Choice(name="Ethereum", value="ethereum"),
         app_commands.Choice(name="Litecoin", value="litecoin")
     ])
+    # TODO: Pass guild id dynamically
+    @app_commands.guilds(discord.Object(id=DISCORD_GUILD_ID))
     async def _index2(self, interaction: discord.Interaction, currency: str):
         result = await DataService.get_index(currency)
         if result is None:
