@@ -1,15 +1,17 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, ApplicationBuilder
-from app.services.CryptoApiService import CryptoApiService
-from app.services.DatabaseService import AccountService, CryptocurrencyService, FavoriteService
+from app.services.crypto_api_service import CryptoApiService
 from app.models import PlatformType
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
 class TelegramBot:
-    def __init__(self, token: str):
+    def __init__(self, token: str, account_repository, favorite_repository, cryptocurrency_repository):
         self.token = token
+        self.account_repository = account_repository
+        self.favorite_repository = favorite_repository
+        self.cryptocurrency_repository = cryptocurrency_repository
         self.app = ApplicationBuilder().token(token).build()
         self.app.add_handler(CommandHandler("index", self.index_command, block=False))
         self.app.add_handler(CommandHandler("list", self.list_command, block=False))
@@ -63,22 +65,22 @@ class TelegramBot:
         
         crypto_symbol = context.args[0].lower()
         
-        if (not CryptocurrencyService.crypto_exists(crypto_symbol)):
-            available = "❌ *{crypto_symbol}* not found.\n\n📋 **Available cryptocurrencies:**\n\n"
-            for symbol, name in sorted(SYMBOL_TO_ID.items()):
-                available += f"`{symbol}` - {name}\n"
-            await update.message.reply_text(available, parse_mode="Markdown")
+        if (not self.cryptocurrency_repository.crypto_exists(crypto_symbol)):
+            # available = "❌ *{crypto_symbol}* not found.\n\n📋 **Available cryptocurrencies:**\n\n"
+            # for symbol, name in sorted(SYMBOL_TO_ID.items()):
+            #     available += f"`{symbol}` - {name}\n"
+            # await update.message.reply_text(available, parse_mode="Markdown")
             return
         
         # Get or create user account
-        user = AccountService.get_or_create_account(
+        user = self.account_repository.get_or_create_account(
                 platform=PlatformType.Telegram,
                 platform_id=user_id
             )
         
         logging.info(f"ADD_FAVORITE")
         # Add to favorites
-        success = FavoriteService.add_favorite(
+        success = self.favorite_repository.add_favorite(
             platform=PlatformType.Telegram,
             platform_id=user_id,
             symbol=crypto_symbol

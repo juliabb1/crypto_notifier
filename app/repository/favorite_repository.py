@@ -1,15 +1,16 @@
 import logging
 from sqlalchemy.orm import Session
 from app.models import Account, Cryptocurrency, PlatformType
-from app.services.base_service import BaseService
+from app.repository.base_repository import BaseRepository
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
 
-class FavoriteService(BaseService):
+class FavoriteRepository(BaseRepository):
     
     def add_favorite(self, platform: PlatformType, platform_id: str, symbol: str) -> bool:
         with self.get_session() as db:
+            
             account = db.query(Account).filter(
                 Account.platform == platform,
                 Account.platformId == str(platform_id)

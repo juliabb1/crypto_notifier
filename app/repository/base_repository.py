@@ -7,7 +7,7 @@ from app.db import SessionLocal
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
 
-class BaseService:
+class BaseRepository:
     
     def __init__(self, db: Session = None):
         self._db = db

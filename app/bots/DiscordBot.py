@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord import app_commands
 
 import app
-from app.services.CryptoApiService import CryptoApiService
+from app.services.crypto_api_service import CryptoApiService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 DISCORD_GUILD_ID = int(os.environ.get('DISCORD_GUILD_ID'))

@@ -7,9 +7,10 @@ import httpx
 from dotenv import load_dotenv
 from app.bots.DiscordBot import DiscordBot
 from app.bots.TelegramBot import TelegramBot
-from app.services.cryptocurrency_service import CryptocurrencyService
-from app.services.CryptoApiService import CryptoApiService
-from app.
+from app.services.crypto_api_service import CryptoApiService
+from app.repository.account_repository import AccountRepository
+from app.repository.favorite_repository import FavoriteRepository
+from app.repository.cryptocurrency_repository import CryptocurrencyRepository
 
 load_dotenv(dotenv_path='.env.dev')
 DISCORD_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
@@ -32,7 +33,9 @@ async def run_bots_asynchronously():
     #         crypto_service_db.store_cryptocurrencies(crypto_currencies)
 
     crypto_api_service = CryptoApiService(httpx.AsyncClient())
-    account_service = AccountService()
+    account_repository = AccountRepository()
+    cryptocurrency_repository = CryptocurrencyRepository()
+    favorite_repository = favorite_repository.FavoriteRepository()
 
     discord_bot = DiscordBot(
         DISCORD_TOKEN, 

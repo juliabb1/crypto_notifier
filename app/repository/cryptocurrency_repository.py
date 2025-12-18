@@ -1,12 +1,12 @@
 import logging
 from sqlalchemy.orm import Session
 from app.models import Cryptocurrency, Coin
-from app.services.base_service import BaseService
+from app.repository.base_repository import BaseRepository
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
 
-class CryptocurrencyService(BaseService):
+class CryptocurrencyRepository(BaseRepository):
     
     def cryptocurrencies_exist(self) -> bool:
         with self.get_session() as db:
