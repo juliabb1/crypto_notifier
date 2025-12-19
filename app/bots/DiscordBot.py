@@ -109,7 +109,7 @@ class DiscordBot:
         @self.bot.event
         async def on_command_error(ctx, error):
             if isinstance(error, commands.CommandNotFound):
-                await ctx.send(f"Command not found. Use `/echo`, `/index`, or `/list`")
+                await ctx.send(f"Command not found.")
             else:
                 logging.error(f"Command error: {error}")
 

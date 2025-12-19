@@ -17,9 +17,7 @@ class CryptoApiService:
             'page': 1
         }
         url = f"{self.BASE_URL}/markets"
-        # response = await self.client.get(url, params=params)
-        async with self.client as client:
-            response = await client.get(url, params=params)     
+        response = await self.client.get(url, params=params)
         json_obj = json.loads(response.text)
         coins = [
             Coin(**coin_data)
@@ -34,8 +32,7 @@ class CryptoApiService:
             'vs_currency': 'eur'
         }
         url = f"{self.BASE_URL}/{coin_id}"
-        async with self.client as client:
-            response = await client.get(url, params=params)
+        response = await self.client.get(url, params=params)
         json_obj = json.loads(response.text)
         result = json_obj.get('market_data', {}).get('current_price', {}).get('eur')
         return result

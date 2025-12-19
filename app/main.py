@@ -25,34 +25,43 @@ DISCORD_CHANNEL_ID = int(os.environ.get('DISCORD_CHANNEL_ID'))
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
+async def initialize_crypto_data(crypto_repository: CryptocurrencyRepository, crypto_api_service: CryptoApiService):
+    if crypto_repository.is_empty():
+        crypto_currencies = await crypto_api_service.list_top_crypto_currencies(amount=100)
+        crypto_repository.store_cryptocurrencies(crypto_currencies)
+    else:
+        logging.info("Cryptocurrency data already initialized.")
 
 async def run_bots_asynchronously():
-    # crypto_service_db = CryptocurrencyService()
-    
-    # if not crypto_service_db.cryptocurrencies_exist():
-    #     async with httpx.AsyncClient() as client:
-    #         crypto_api_service = CryptoApiService(client)
-    #         crypto_currencies = await crypto_api_service.list_top_crypto_currencies(amount=50)
-    #         crypto_service_db.store_cryptocurrencies(crypto_currencies)
 
     account_repository = AccountRepository()
-    cryptocurrency_repository = CryptocurrencyRepository()
     favorite_repository = FavoriteRepository()
-    crypto_api_service = CryptoApiService(httpx.AsyncClient())  
+    cryptocurrency_repository = CryptocurrencyRepository()
+    http_client = httpx.AsyncClient()
+    crypto_api_service = CryptoApiService(http_client)  
     data_service = DataService(
         account_repository,
         favorite_repository,
         cryptocurrency_repository
     )
 
+   
+    await initialize_crypto_data(cryptocurrency_repository, crypto_api_service)
+
     discord_bot = DiscordBot(
         DISCORD_TOKEN, 
         DISCORD_CLIENT_ID, 
         DISCORD_GUILD_ID, 
         DISCORD_CHANNEL_ID,
-        crypto_api_service
+        crypto_api_service,
+        data_service
     )
-    telegram_bot = TelegramBot(TELEGRAM_TOKEN)
+    telegram_bot = TelegramBot(
+        TELEGRAM_TOKEN,
+        crypto_api_service,
+        data_service,
+        favorite_repository
+    )
     await asyncio.gather(
         discord_bot.start(),
         telegram_bot.start()
@@ -64,6 +73,7 @@ async def run_bots_asynchronously():
     
     await discord_bot.stop()
     await telegram_bot.stop()
+    await http_client.aclose()
 
 
 if __name__ == '__main__':

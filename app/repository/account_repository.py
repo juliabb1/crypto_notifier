@@ -8,40 +8,32 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %
 
 
 class AccountRepository(BaseRepository):
-    
-    def get_or_create_account(self, platform: PlatformType, platform_id: str) -> Account:
-        with self.get_session() as db:
-            # Check if account already exists
-            existing_account = db.query(Account).filter(
-                Account.platform == platform,
-                Account.platformId == str(platform_id)
-            ).first()
-            
-            if existing_account:
-                logging.info(f"Found existing {platform.value} account for {platform_id}")
-                return existing_account
-            
-            # Create new account if it doesn't exist
-            new_account = Account(
-                platform=platform,
-                platformId=str(platform_id),
-                created_at=datetime.now()
-            )
-            db.add(new_account)
-            db.flush()  # Get the ID before committing
-            logging.info(f"Created new {platform.value} account for {platform_id}")
-            return new_account
-    
-    def findByPlatformAndId(self, platform: PlatformType, platform_id: str) -> Account | None:
-        with self.get_session() as db:
-            return db.query(Account).filter(
-                Account.platform == platform,
-                Account.platformId == str(platform_id)
-            ).first()
-    
+
     def exists(self, platform: PlatformType, platform_id: str) -> bool:
         with self.get_session() as db:
             return db.query(Account).filter(
                 Account.platform == platform,
                 Account.platformId == str(platform_id)
             ).exists().scalar()
+
+    def find_by_platform_and_id(self, platform: PlatformType, platform_id: str) -> Account | None:
+        with self.get_session() as db:
+            return db.query(Account).filter(
+                Account.platform == platform,
+                Account.platformId == str(platform_id)
+            ).first()
+        
+    def create(self, platform: PlatformType, platformId: str) -> Account:
+        with self.get_session() as db:
+            new_account = Account(
+                platform=platform,
+                platformId=str(platformId),
+                created_at=datetime.now()
+            )
+            db.add(new_account)
+            db.commit()
+            db.refresh(new_account)
+            logging.info(f"Created new {platform.value} account for {platformId}")
+            return new_account
+    
+    
