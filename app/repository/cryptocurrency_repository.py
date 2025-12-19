@@ -8,16 +8,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %
 
 class CryptocurrencyRepository(BaseRepository):
     
-    def cryptocurrencies_exist(self) -> bool:
+    def is_empty(self) -> bool:
         with self.get_session() as db:
             count = db.query(Cryptocurrency).count()
-            return count > 0
+            return count == 0
     
-    def crypto_exists(self, identifier: str) -> bool:
+    def exists(self, identifier: str) -> bool:
         with self.get_session() as db:
             crypto = db.query(Cryptocurrency).filter(
-                (Cryptocurrency.symbol == identifier.upper()) |
-                (Cryptocurrency.fullName == identifier)
+                (Cryptocurrency.symbol.lower() == identifier.lower()) |
+                (Cryptocurrency.fullName.lower() == identifier.lower()  )
             ).first()
             return crypto is not None
     

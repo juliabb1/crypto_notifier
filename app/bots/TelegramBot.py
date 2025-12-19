@@ -1,17 +1,24 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, ApplicationBuilder
+from app.repository.account_repository import AccountRepository
+from app.repository.cryptocurrency_repository import CryptocurrencyRepository
+from app.repository.favorite_repository import FavoriteRepository
 from app.services.crypto_api_service import CryptoApiService
-from app.models import PlatformType
+from app.services.data_service import DataService
+from app.models import Account, PlatformType
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 
 class TelegramBot:
-    def __init__(self, token: str, account_repository, favorite_repository, cryptocurrency_repository):
+    def __init__(
+            self, 
+            token: str, 
+            crypto_api_service: CryptoApiService,
+            data_service: DataService):
         self.token = token
-        self.account_repository = account_repository
-        self.favorite_repository = favorite_repository
-        self.cryptocurrency_repository = cryptocurrency_repository
+        self.crypto_api_service = crypto_api_service
+        self.data_service = data_service
         self.app = ApplicationBuilder().token(token).build()
         self.app.add_handler(CommandHandler("index", self.index_command, block=False))
         self.app.add_handler(CommandHandler("list", self.list_command, block=False))
@@ -65,11 +72,10 @@ class TelegramBot:
         
         crypto_symbol = context.args[0].lower()
         
-        if (not self.cryptocurrency_repository.crypto_exists(crypto_symbol)):
-            # available = "❌ *{crypto_symbol}* not found.\n\n📋 **Available cryptocurrencies:**\n\n"
-            # for symbol, name in sorted(SYMBOL_TO_ID.items()):
-            #     available += f"`{symbol}` - {name}\n"
-            # await update.message.reply_text(available, parse_mode="Markdown")
+        # TODO: Could also be fullName
+        if (not self.cryptocurrency_repository.exists(crypto_symbol)):
+            text = "❌ *{crypto_symbol}* not found.\n\\n"
+            await update.message.reply_text(text, parse_mode="Markdown")
             return
         
         # Get or create user account

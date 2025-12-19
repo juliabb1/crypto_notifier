@@ -32,9 +32,16 @@ class AccountRepository(BaseRepository):
             logging.info(f"Created new {platform.value} account for {platform_id}")
             return new_account
     
-    def get_account(self, platform: PlatformType, platform_id: str) -> Account | None:
+    def findByPlatformAndId(self, platform: PlatformType, platform_id: str) -> Account | None:
         with self.get_session() as db:
             return db.query(Account).filter(
                 Account.platform == platform,
                 Account.platformId == str(platform_id)
             ).first()
+    
+    def exists(self, platform: PlatformType, platform_id: str) -> bool:
+        with self.get_session() as db:
+            return db.query(Account).filter(
+                Account.platform == platform,
+                Account.platformId == str(platform_id)
+            ).exists().scalar()

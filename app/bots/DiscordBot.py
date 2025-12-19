@@ -2,13 +2,14 @@ import os
 import logging
 import json
 import asyncio
+from h11 import Data
 import httpx
 import discord
 from discord.ext import commands
 from discord import app_commands
-
 import app
 from app.services.crypto_api_service import CryptoApiService
+from app.services.data_service import DataService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
 DISCORD_GUILD_ID = int(os.environ.get('DISCORD_GUILD_ID'))
@@ -70,7 +71,6 @@ class Crypto_Notifier_Cog(commands.Cog):
             return
         await message.channel.send(f"I heard you say: {message.content}")
 
-
 class DiscordBot:
     def __init__(
             self, 
@@ -78,13 +78,15 @@ class DiscordBot:
             client_id: int, 
             guild_id: int, 
             channel_id: int,
-            crypto_service: CryptoApiService):
+            crypto_api_service: CryptoApiService,
+            data_service: DataService):
         
         self.token = token
         self.client_id = client_id
         self.guild_id = guild_id # guild = server
         self.channel_id = channel_id
-        self.crypto_api_service = crypto_service
+        self.crypto_api_service = crypto_api_service
+        self.data_service = data_service
 
         intents = discord.Intents.default()
         intents.message_content = True

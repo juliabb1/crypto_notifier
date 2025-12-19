@@ -3,14 +3,17 @@ from calendar import c
 import os
 import logging
 from re import A
+from h11 import Data
 import httpx
 from dotenv import load_dotenv
 from app.bots.DiscordBot import DiscordBot
 from app.bots.TelegramBot import TelegramBot
-from app.services.crypto_api_service import CryptoApiService
+from app.services import data_service
 from app.repository.account_repository import AccountRepository
 from app.repository.favorite_repository import FavoriteRepository
 from app.repository.cryptocurrency_repository import CryptocurrencyRepository
+from app.services.crypto_api_service import CryptoApiService
+from app.services.data_service import DataService
 
 load_dotenv(dotenv_path='.env.dev')
 DISCORD_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
@@ -32,10 +35,15 @@ async def run_bots_asynchronously():
     #         crypto_currencies = await crypto_api_service.list_top_crypto_currencies(amount=50)
     #         crypto_service_db.store_cryptocurrencies(crypto_currencies)
 
-    crypto_api_service = CryptoApiService(httpx.AsyncClient())
     account_repository = AccountRepository()
     cryptocurrency_repository = CryptocurrencyRepository()
-    favorite_repository = favorite_repository.FavoriteRepository()
+    favorite_repository = FavoriteRepository()
+    crypto_api_service = CryptoApiService(httpx.AsyncClient())  
+    data_service = DataService(
+        account_repository,
+        favorite_repository,
+        cryptocurrency_repository
+    )
 
     discord_bot = DiscordBot(
         DISCORD_TOKEN, 
