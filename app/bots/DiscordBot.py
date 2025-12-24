@@ -1,13 +1,9 @@
 import os
 import logging
-import json
-import asyncio
-from h11 import Data
-import httpx
 import discord
 from discord.ext import commands
 from discord import app_commands
-import app
+from app.repository.cryptocurrency_repository import CryptocurrencyRepository
 from app.services.crypto_api_service import CryptoApiService
 from app.services.data_service import DataService
 
@@ -16,36 +12,34 @@ DISCORD_GUILD_ID = int(os.environ.get('DISCORD_GUILD_ID'))
 
 
 class Crypto_Notifier_Cog(commands.Cog):
-    def __init__(self, bot, crypto_service: CryptoApiService):
+    def __init__(
+            self, 
+            bot, 
+            crypto_service: CryptoApiService, 
+            cryptocurrency_repository: CryptocurrencyRepository):
         self.bot = bot
         self.crypto_service = crypto_service
+        self.cryptocurrency_repository = cryptocurrency_repository
         self._last_member = None
+
+    async def cog_load(self):
+        crypto_names = self.cryptocurrency_repository.get_all_cryptocurrency_names()
+        choices = [
+            app_commands.Choice(name=name, value=name)
+            for name in crypto_names[:25]  # Discord limit is 25 choices
+        ]
+        # TODO: Doesnt work, fix it
+        self._index.choices = choices
+        return await super().cog_load()
 
     @commands.command(name='echo')
     async def _echo(self, ctx: commands.Context, *, arg: str):
         await ctx.channel.send(f"You said: {arg}")
 
-    @commands.command(name='index')
-    async def _index(self, ctx: commands.Context, *, arg: str):
-        if not arg:
-            await ctx.channel.send("Please provide a cryptocurrency name. Usage: /index btc")
-            return
-        result = await self.crypto_service.get_index(arg)
-        if result is None:
-            await ctx.channel.send(f"Could not find price for {arg}")
-        else:
-            await ctx.channel.send(f"{arg.capitalize()}: {result:.2f} €")
-
-    @app_commands.command(name="index2", description="Get price/index of a cryptocurrency")
+    @app_commands.command(name="index", description="Get price/index of a cryptocurrency")
     @app_commands.describe(currency="The type of cryptocurrency")
-    @app_commands.choices(currency=[
-        app_commands.Choice(name="Bitcoin", value="bitcoin"),
-        app_commands.Choice(name="Ethereum", value="ethereum"),
-        app_commands.Choice(name="Litecoin", value="litecoin")
-    ])
-    # TODO: Pass guild id dynamically
     @app_commands.guilds(discord.Object(id=DISCORD_GUILD_ID))
-    async def _index2(self, interaction: discord.Interaction, currency: str):
+    async def _index(self, interaction: discord.Interaction, currency: str):
         result = await self.crypto_service.get_index(currency)
         if result is None:
             await interaction.response.send_message(f"Could not find price for {currency}")
@@ -79,7 +73,8 @@ class DiscordBot:
             guild_id: int, 
             channel_id: int,
             crypto_api_service: CryptoApiService,
-            data_service: DataService):
+            data_service: DataService,
+            cryptocurrency_repository: CryptocurrencyRepository):
         
         self.token = token
         self.client_id = client_id
@@ -87,6 +82,7 @@ class DiscordBot:
         self.channel_id = channel_id
         self.crypto_api_service = crypto_api_service
         self.data_service = data_service
+        self.cryptocurrency_repository = cryptocurrency_repository
 
         intents = discord.Intents.default()
         intents.message_content = True
@@ -114,13 +110,11 @@ class DiscordBot:
                 logging.error(f"Command error: {error}")
 
     async def start(self):        
-        await self.bot.add_cog(Crypto_Notifier_Cog(self.bot, self.crypto_api_service))
+        cog = Crypto_Notifier_Cog(self.bot, self.crypto_api_service, self.cryptocurrency_repository)
+        await self.bot.add_cog(cog)
         await self.bot.start(self.token)
         logging.info("DiscordBot has started!")
 
     async def stop(self):
         """Stop the Discord bot."""
         await self.bot.close()
-        if self.http_client:
-            await self.http_client.aclose()
-            logging.info("HTTP client closed")

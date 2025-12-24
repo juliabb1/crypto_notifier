@@ -50,12 +50,12 @@ class TelegramBot:
         if not context.args:
             await update.message.reply_text("Please provide a cryptocurrency name. Usage: /index bitcoin")
             return
-        index = context.args[0]
-        result = await self.crypto_api_service.get_index(index=index)
+        input = context.args[0]
+        result = await self.crypto_api_service.get_index(input)
         if result is None:
-            await update.message.reply_text(f"Could not find price for {index}")
+            await update.message.reply_text(f"Could not find price for {input}")
         else:
-            await update.message.reply_text(f"{index.capitalize()}: {result:.2f} €")
+            await update.message.reply_text(f"{input.capitalize()}: {result:.2f} €")
 
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         result = await self.crypto_api_service.list_top_crypto_currencies(amount=10)

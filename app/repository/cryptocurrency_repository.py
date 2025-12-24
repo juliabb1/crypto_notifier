@@ -31,8 +31,13 @@ class CryptocurrencyRepository(BaseRepository):
             ).first()
     
     def get_all_cryptocurrencies(self) -> list[Cryptocurrency]:
+        # returns detached ORM object --> accessing props tries to access session...
         with self.get_session() as db:
             return db.query(Cryptocurrency).all()
+    
+    def get_all_cryptocurrency_names(self) -> list[str]:
+        with self.get_session() as db:
+            return [crypto.fullName for crypto in db.query(Cryptocurrency).all()]
     
     def store_cryptocurrencies(self, cryptocurrencies: list[Coin]) -> bool:
         """Store cryptocurrencies in the database."""

@@ -6,6 +6,9 @@ __pycache__/
 # IDE files (JetBrains: PyCharm)
 .idea/
 
+# IDE files (VS Code)
+.vscode/
+
 # Virtual environments
 venv/
 

@@ -1,14 +1,10 @@
 import asyncio
-from calendar import c
 import os
 import logging
-from re import A
-from h11 import Data
 import httpx
 from dotenv import load_dotenv
 from app.bots.DiscordBot import DiscordBot
 from app.bots.TelegramBot import TelegramBot
-from app.services import data_service
 from app.repository.account_repository import AccountRepository
 from app.repository.favorite_repository import FavoriteRepository
 from app.repository.cryptocurrency_repository import CryptocurrencyRepository
@@ -54,7 +50,8 @@ async def async_main():
         DISCORD_GUILD_ID, 
         DISCORD_CHANNEL_ID,
         crypto_api_service,
-        data_service
+        data_service,
+        cryptocurrency_repository=cryptocurrency_repository
     )
     telegram_bot = TelegramBot(
         TELEGRAM_TOKEN,
@@ -62,18 +59,17 @@ async def async_main():
         data_service,
         favorite_repository
     )
-    await asyncio.gather(
-        discord_bot.start(),
-        telegram_bot.start()
-    )
     try:
-        await asyncio.Future() 
-    except asyncio.CancelledError:  
-        pass  
-    
-    await discord_bot.stop()
-    await telegram_bot.stop()
-    await http_client.aclose()
+        await asyncio.gather(
+            discord_bot.start(),
+            telegram_bot.start()
+        )
+    except KeyboardInterrupt:
+        logging.info("Shutting down bots...")
+    finally:
+        await discord_bot.stop()
+        await telegram_bot.stop()
+        await http_client.aclose()
 
 
 if __name__ == '__main__':
