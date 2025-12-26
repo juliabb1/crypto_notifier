@@ -29,7 +29,7 @@ class TelegramBot:
         self.app = ApplicationBuilder().token(token).build()
         self.app.add_handler(CommandHandler("index", self.index_command, block=False))
         self.app.add_handler(CommandHandler("list", self.list_command, block=False))
-        self.app.add_handler(CommandHandler("add_fav", self.save_fav_command, block=False))
+        self.app.add_handler(CommandHandler("add_fav", self.add_fav_command, block=False))
 
     async def start(self):
         """Start the Telegram bot."""
@@ -69,7 +69,7 @@ class TelegramBot:
             message += f"   Market Cap: {coin.market_cap:,} €\n\n"
         await update.message.reply_text(message)
 
-    async def save_fav_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def add_fav_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         user_id = update.effective_user.id
         input_crypto = context.args[0].lower()
         answer = self._bot_service.add_favorite(

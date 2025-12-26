@@ -48,8 +48,8 @@ class Crypto_Notifier_Cog(commands.Cog):
             message += f"   Market Cap: ${coin.market_cap:,} €\n\n"
         await ctx.channel.send(message)
 
-    @commands.command(name='save_fav')
-    async def _save_fav(self, ctx: commands.Context, currency: str):
+    @commands.command(name='add_fav')
+    async def _add_fav(self, ctx: commands.Context, currency: str):
         """Save cryptocurrency as favorite."""
         user_id = ctx.author.id
         input_crypto = currency.lower()
