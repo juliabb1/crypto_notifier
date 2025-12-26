@@ -3,12 +3,18 @@ import os
 import logging
 import httpx
 from dotenv import load_dotenv
-from app.bots.DiscordBot import DiscordBot
-from app.bots.TelegramBot import TelegramBot
+from pytest import Session
+from telegram import Bot
+from app.bots.discord_bot import DiscordBot
+from app.bots.telegram_bot import TelegramBot
 from app.repository.account_repository import AccountRepository
 from app.repository.favorite_repository import FavoriteRepository
 from app.repository.cryptocurrency_repository import CryptocurrencyRepository
+from app.services.bot_service import BotService
 from app.services.crypto_api_service import CryptoApiService
+from app.services.session_factory import Session_Factory
+
+
 
 load_dotenv(dotenv_path='.env.dev')
 DISCORD_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
@@ -29,9 +35,20 @@ async def initialize_crypto_data(crypto_repository: CryptocurrencyRepository, cr
 
 async def async_main():
 
+    # session = session.Session()
+    session = Session_Factory()
+
     account_repository = AccountRepository()
     favorite_repository = FavoriteRepository()
     cryptocurrency_repository = CryptocurrencyRepository()
+
+    bot_service = BotService(
+        session,
+        account_repository,
+        favorite_repository,
+        cryptocurrency_repository
+    )
+
     http_client = httpx.AsyncClient()
     crypto_api_service = CryptoApiService(http_client)  
 

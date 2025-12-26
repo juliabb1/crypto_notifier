@@ -1,17 +1,9 @@
-from config.config import DATABASE_URL
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import sessionmaker
+from config.config import DATABASE_URL
 
 engine = create_engine(DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+Session_Factory = sessionmaker(bind=engine)
 
 def test_connection():
     try:

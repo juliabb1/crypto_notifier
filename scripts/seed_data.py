@@ -1,5 +1,5 @@
 # scripts/seed_data.py
-from app.db import SessionLocal, engine
+from app.db import Session, engine
 from app.models import Base, Account, Cryptocurrency, Notification, PlatformType, NotificationDirection
 from sqlalchemy import inspect
 
@@ -18,7 +18,7 @@ def create_tables_if_not_exist():
 
 
 def seed():
-    db = SessionLocal()
+    db = Session()
 
     try:
     
