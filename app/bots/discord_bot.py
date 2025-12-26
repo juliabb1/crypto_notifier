@@ -59,9 +59,6 @@ class Crypto_Notifier_Cog(commands.Cog):
             input_crypto=input_crypto
         )
         await ctx.send(answer)
-        return
-
-
 
 class DiscordBot:
 

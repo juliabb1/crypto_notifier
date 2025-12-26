@@ -78,36 +78,3 @@ class TelegramBot:
             input_crypto=input_crypto
         )
         await update.message.reply_text(answer)
-        return
-    
-        #     return
-        # account = self.account_repository.find_by_platform_and_id(
-        #     platform=self.PLATFORM_TYPE,
-        #     platform_id=str(user_id)
-        # )
-        # if account is None:
-        #     account = self.account_repository.create(
-        #         platform=self.PLATFORM_TYPE,
-        #         platformId=str(user_id)
-        #     )
-        # cryptocurrency = self.cryptocurrency_repository.find_by_name_or_symbol(input_crypto)
-        # if cryptocurrency is None:
-        #     return False
-
-        # if not account:
-        #     await update.message.reply_text(f"⚠️ Could not find or create account for user ID {user_id}.")
-        #     return
-
-        # if not cryptocurrency:
-        #     await update.message.reply_text(f"⚠️ Cryptocurrency '{input_crypto}' not found. Please check the name/symbol and try again.")
-        #     return
-
-        # success = self.favorite_repository.add_favorite(
-        #     account=account,
-        #     crypto=cryptocurrency
-        # )
-        
-        # if success:
-        #     await update.message.reply_text(f"✅ Saved {input_crypto} as your favorite cryptocurrency!")
-        # else:
-        #     await update.message.reply_text(f"⚠️ {input_crypto} is already in your favorites.")
