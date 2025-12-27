@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.models import Account, PlatformType
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s",
 )
 
 

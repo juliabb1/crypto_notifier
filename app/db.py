@@ -1,4 +1,3 @@
-from tkinter import E
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from config.config import DATABASE_URL

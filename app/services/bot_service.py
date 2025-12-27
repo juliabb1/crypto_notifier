@@ -37,7 +37,10 @@ class BotService:
                 )
 
                 if not cryptocurrency:
-                    return f"⚠️ Cryptocurrency '{input_crypto}' not found. Please check the name/symbol and try again."
+                    return (
+                        f"⚠️ Cryptocurrency '{input_crypto}' not found. "
+                        "Please check the name/symbol and try again."
+                    )
 
                 if cryptocurrency in account.favorite_cryptos:
                     return f"⚠️ {input_crypto} is already in your favorites."
@@ -50,4 +53,4 @@ class BotService:
 
         except Exception as e:
             logging.error(f"Error adding favorite: {e}")
-            return "❌ An error occurred while saving your favorite. Please try again later."
+            return "❌ An error occurred while saving your favorite. " "Please try again later."

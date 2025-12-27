@@ -20,7 +20,8 @@ DISCORD_CLIENT_ID = int(os.environ.get("DISCORD_CLIENT_ID", "0"))
 DISCORD_CHANNEL_ID = int(os.environ.get("DISCORD_CHANNEL_ID", "0"))
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s",
 )
 
 
@@ -46,7 +47,11 @@ async def async_main():
         crypto_api_service,
     )
     telegram_bot = TelegramBot(
-        TELEGRAM_TOKEN, crypto_api_service, account_repository, favorite_repository, bot_service
+        TELEGRAM_TOKEN,
+        crypto_api_service,
+        account_repository,
+        favorite_repository,
+        bot_service,
     )
     try:
         await asyncio.gather(discord_bot.start(), telegram_bot.start())

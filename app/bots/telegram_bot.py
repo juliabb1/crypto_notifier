@@ -8,7 +8,8 @@ from app.services.crypto_api_service import CryptoApiService
 from app.models import PlatformType
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s",
 )
 
 
@@ -39,21 +40,25 @@ class TelegramBot:
         """Start the Telegram bot."""
         await self.app.initialize()
         await self.app.start()
-        await self.app.updater.start_polling(
-            poll_interval=0.0,
-            timeout=60,
-            allowed_updates=["message", "callback_query"],
-            drop_pending_updates=True,
-        )
+        if self.app.updater is not None:
+            await self.app.updater.start_polling(
+                poll_interval=0.0,
+                timeout=60,
+                allowed_updates=["message", "callback_query"],
+                drop_pending_updates=True,
+            )
         logging.info("TelegramBot has started!")
 
     async def stop(self):
         """Stop the Telegram bot."""
-        await self.app.updater.stop()
+        if self.app.updater is not None:
+            await self.app.updater.stop()
         await self.app.stop()
         await self.app.shutdown()
 
     async def index_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if update.message is None:
+            return
         if not context.args:
             await update.message.reply_text(
                 "Please provide a cryptocurrency name. Usage: /index bitcoin"
@@ -67,6 +72,8 @@ class TelegramBot:
             await update.message.reply_text(f"{input.capitalize()}: {result:.2f} €")
 
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if update.message is None:
+            return
         result = await self.crypto_api_service.list_top_crypto_currencies(amount=10)
         message = "Top 10 Cryptocurrencies by Market Cap:\n\n"
         for coin in result:
@@ -76,9 +83,16 @@ class TelegramBot:
         await update.message.reply_text(message)
 
     async def add_fav_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if update.effective_user is None or update.message is None:
+            return
+        if context.args is None or not context.args:
+            await update.message.reply_text("Please provide a cryptocurrency name.")
+            return
         user_id = update.effective_user.id
         input_crypto = context.args[0].lower()
         answer = self._bot_service.add_favorite(
-            platformType=self.PLATFORM_TYPE, user_id=str(user_id), input_crypto=input_crypto
+            platformType=self.PLATFORM_TYPE,
+            user_id=str(user_id),
+            input_crypto=input_crypto,
         )
         await update.message.reply_text(answer)

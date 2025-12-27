@@ -4,7 +4,8 @@ from sqlalchemy import func
 from app.models import Cryptocurrency, Coin
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s",
 )
 
 

@@ -8,9 +8,11 @@ from app.services.bot_service import BotService
 from app.services.crypto_api_service import CryptoApiService
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(threadName)s - %(levelname)s - %(message)s",
 )
-DISCORD_GUILD_ID = int(os.environ.get("DISCORD_GUILD_ID"))
+# TODO: Load dynamically
+DISCORD_GUILD_ID = int(os.environ.get("DISCORD_GUILD_ID", "0"))
 
 
 class Crypto_Notifier_Cog(commands.Cog):
@@ -56,7 +58,9 @@ class Crypto_Notifier_Cog(commands.Cog):
         user_id = ctx.author.id
         input_crypto = currency.lower()
         answer = self._bot_service.add_favorite(
-            platformType=self.platform_type, user_id=str(user_id), input_crypto=input_crypto
+            platformType=self.platform_type,
+            user_id=str(user_id),
+            input_crypto=input_crypto,
         )
         await ctx.send(answer)
 
@@ -104,7 +108,7 @@ class DiscordBot:
         @self.bot.event
         async def on_command_error(ctx, error):
             if isinstance(error, commands.CommandNotFound):
-                await ctx.send(f"Command not found.")
+                await ctx.send("Command not found.")
             else:
                 logging.error(f"Command error: {error}")
 
@@ -114,6 +118,7 @@ class DiscordBot:
         )
         await self.bot.add_cog(cog)
 
+        # TODO: Make it work
         # Build choices from cryptocurrency repository
         # crypto_names = self.cryptocurrency_repository.get_all_cryptocurrency_names()
         # choices = [

@@ -1,12 +1,17 @@
 [flake8]
-max-line-length = 88
-extend-ignore = E203, E704
-
+max-line-length = 100
 exclude =
+    .git,
+    __pycache__,
     venv,
     .venv,
-    env,
-    bin,
-    lib,
-    __pycache__,
-    .git
+    node_modules,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .pytest_cache,
+    .mypy_cache,
+    .vscode,
+    .idea
+ignore = E203, W503, E501
