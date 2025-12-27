@@ -31,11 +31,35 @@ A Crypto Tracking Tool.
 2. Start MySQL container only: `docker-compose -f docker-compose.dev.yml up -d` \
 or with new docker compose command: `docker compose -f docker-compose.dev.yml up -d`
 3. Install requirements locally: `pip install -r requirements.txt`
-4. Initialize and seed DB:
+4. Set Python path to project root: `export PYTHONPATH=$PYTHONPATH:$(pwd)` (so imports work correctly)
+5. Initialize and seed DB:
    - `python scripts/init_db.py` / `python -m scripts.init_db`
    - `python scripts/seed_data.py` / `python -m scripts.seed_data` -> adds sample data
-5. Run your app: `python -m app.main` -> start software
-6. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
+6. Run your app: `python -m app.main` -> start software
+7. Run tests: `python -m pytest` or `python -m pytest tests/unit` -> run all tests or only e.g. unit tests
+
+### Code-Qualität
+Nutzung von Black, MyPy & Flake8 für automatisierte Formatierung & Linting. Diese werden über Pre-Commit Hooks gesteuert.
+1. Installiere die Entwickler-Abhängigkeiten: `pip install -r requirements-dev.txt`
+2. Pre-Commit Hooks aktivieren: `pre-commit install`
+Hinweis: Der Befehl pre-commit install sorgt dafür, dass bei jedem git commit automatisch geprüft wird, ob der Code sauber ist.
+
+Damit du nicht manuell formatieren musst, richte deine IDE so ein, dass es den Code beim Speichern automatisch bereinigt mit Black & MyPy.
+1. Installiere die "Black Formatter" Extension.
+2. Einstellungen -> "Format On Save" aktivieren.
+3. Einstellungen -> Default Formatter und wähle Black Formatter.
+4. Installiere die "Mypy Type Checker" Extension & aktiviere sie.
+
+#### MyPy Mini-Tutorial:
+Statt:
+`price = 50000.50`
+`name = "Bitcoin"`
+`def check_limit(current_price, limit): return current_price > limit`
+Mit MyPy nun pflicht:
+`price: float = 50000.50`
+`name: str = "Bitcoin"`
+`def check_limit(current_price: float, limit: float) -> bool: return current_price > limit'`
+
 
 # Branching and deployment Strategy
 
