@@ -1,5 +1,4 @@
 from app.repository.cryptocurrency_repository import CryptocurrencyRepository
-from sqlalchemy.orm import Session
 from app.services.crypto_api_service import CryptoApiService
 from app.db import session_scope
 

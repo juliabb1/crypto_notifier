@@ -10,10 +10,7 @@ from app.repository.favorite_repository import FavoriteRepository
 from app.repository.cryptocurrency_repository import CryptocurrencyRepository
 from app.services.bot_service import BotService
 from app.services.crypto_api_service import CryptoApiService
-from app.db import Session_Factory
 from app.services.general_service import GeneralService
-
-
 
 load_dotenv(dotenv_path='.env.dev')
 DISCORD_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
