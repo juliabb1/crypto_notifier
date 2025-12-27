@@ -2,24 +2,19 @@
 line-length = 100
 target-version = ['py312']
 
-[tool.flake8]
-# Flake8-Konfiguration
-max-line-length = 100
-exclude = [
-    ".git",
-    "__pycache__",
-    "venv", # Schließe die virtuelle Umgebung aus
-    "node_modules",
-]
-
-ignore = [
-    "E203",
-    "W503",
-    "E501",
-]
+# see flake8 config in .flake8 file
 
 [tool.mypy]
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 check_untyped_defs = true
+exclude = [
+    '^venv/',
+    '^\.venv/',
+    '^build/',
+    '^dist/',
+    '^env/',
+    '^\.git/',
+    '^\.mypy_cache/',
+]
